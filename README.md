@@ -151,7 +151,7 @@ Caveats
 
 * This is a test suite. It obviously cannot prove that a database always behaves in a certain way,
   it can only probe certain examples and observe what happens.
-* Tests are currently executed by hand. This means that any concurrency issues that depend on fast
+* Tests are currently executed by hand (see below for automating them). This means that any concurrency issues that depend on fast
   timings will not be found. However, it's remarkable that even at the slow speed of a human, you
   can still easily demonstrate concurrency issues. It's not the speed that matters, it's the
   ordering of events.
@@ -167,6 +167,19 @@ Caveats
 * More check marks doesn't necessarily mean better. This is not
   [Top Trumps](http://en.wikipedia.org/wiki/Top_Trumps), it's a game of trade-offs. All we're
   trying to do here is to understand what we gain and what we lose at different isolation levels.
+
+Automating the tests (WIP)
+--------------------  
+
+Currently, you can automate the testing of some of the databases. You need tmux and docker for this and need to run the script within an existing tmux session with only one (the defaut) pane visible.
+
+For example, to run the MySQL tests:
+
+> ./mysq/run-mysql-tests.sh
+
+You can restart a test suite at any arbitrary point, for example starting at the PMP tests:
+
+> ./mysq/run-mysql-tests.sh PMP
 
 
 Using this project

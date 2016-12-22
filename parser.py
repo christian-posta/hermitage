@@ -34,7 +34,7 @@ def parseFile(raw_file):
                         match  = regex.search(sql_line)
                 
                         session_number = 1 if not match else match.group(0).lstrip("T")
-                        block_lines.append((session_number, sql_line))
+                        block_lines.append((session_number, sql_line.replace("\"", "\\")))
                         current_idx += 1
                 blocks.append((title,block_lines))
     return blocks
@@ -72,8 +72,10 @@ def start_db_sessions(db_client):
     print "setting up session: "
     run_in_session(1, "drop database if exists hermitage;\n")
     run_in_session(1, "create database hermitage;\n")
-    run_in_session(1, "use hermitage;\n")
-    run_in_session(2, "use hermitage;\n")
+
+    for i in range(3):
+        run_in_session(i+1, "use hermitage;\n")
+    
     
 
 
@@ -92,6 +94,10 @@ def main():
 
     raw_file = sys.argv[1]
     db_client = sys.argv[2]
+    skip_to_test = sys.argv[3]
+    skip_if_asked = True if skip_to_test else False
+    
+    
     print "Using testfile: " + raw_file  + " and database client: " + db_client 
     
     # format is (title, (session_number, sql_line))
@@ -104,9 +110,18 @@ def main():
     start_db_sessions(db_client)
 
     setup_block = blocks[0][1]
+    
     # skip first block as thats the setup case
     for block in blocks[1:]:
-        print ">>> New Test: " + block[0] 
+        
+        print ">>> New Test: " + block[0]
+        
+        if skip_if_asked and skip_to_test not in block[0]:
+            print "<<< Skipping test " + block[0]            
+            continue
+        else:
+            skip_if_asked = False  
+
         raw_input()
         reset_test(setup_block)
         
@@ -120,12 +135,11 @@ def main():
              
 def cleanup_tmux():
     print "cleaning up"
-    os.system('tmux send-keys -t 2 "exit" C-m')
-    os.system('tmux send-keys -t 1 "exit" C-m')
-    time.sleep(1)
-
+    
     # order of killing panes matters here
     for i in reversed(range(3)):
+        os.system('tmux send-keys -t '+str(i+1)+' "exit" C-m')
+        time.sleep(1)
         os.system('tmux kill-pane -t ' + str(i+1))
         time.sleep(1)
         
@@ -138,7 +152,7 @@ signal.signal(signal.SIGINT, signal_handler)
 # Call with testfile.md and database client as parameters:
 # parser.py mysql.md mysql        
 if __name__ == "__main__":
-    if not len(sys.argv) == 3:
+    if not len(sys.argv) > 3:
         print "Call this script with the test file and db client as params: "
         print "python parser.py mysql/mysql.md mysql/mysql.sh"
         sys.exit(1)
