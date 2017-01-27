@@ -94,7 +94,9 @@ def main():
 
     raw_file = sys.argv[1]
     db_client = sys.argv[2]
-    skip_to_test = sys.argv[3]
+    skip_to_test = False
+    if len(sys.argv) > 3:
+        skip_to_test = sys.argv[3]
     skip_if_asked = True if skip_to_test else False
     
     
@@ -152,7 +154,7 @@ signal.signal(signal.SIGINT, signal_handler)
 # Call with testfile.md and database client as parameters:
 # parser.py mysql.md mysql        
 if __name__ == "__main__":
-    if not len(sys.argv) > 3:
+    if not len(sys.argv) >= 2:
         print "Call this script with the test file and db client as params: "
         print "python parser.py mysql/mysql.md mysql/mysql.sh"
         sys.exit(1)
